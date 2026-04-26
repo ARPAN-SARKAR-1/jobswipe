@@ -34,7 +34,10 @@ backend/build
 *.db-journal
 *.sqlite
 *.sqlite3
+*.mv.db
+*.trace.db
 prisma/dev.db
+backend/data
 
 # Local uploads
 uploads

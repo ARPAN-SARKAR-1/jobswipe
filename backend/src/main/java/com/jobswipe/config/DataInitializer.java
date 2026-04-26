@@ -100,23 +100,22 @@ public class DataInitializer implements CommandLineRunner {
         job(recruiterTwo, "Cybersecurity Analyst Intern", "SecureLeaf", "https://dummyimage.com/128x128/11131a/ffffff&text=SL", "Gurugram", JobType.INTERNSHIP, WorkMode.ON_SITE, "Rs. 26,000/month", "Security Testing, OWASP, Linux", ExperienceLevel.FRESHER, "Support vulnerability checks and write security observation notes.", "Candidates with cybersecurity coursework or CTF participation.", 26),
         job(recruiterOne, "Mobile App Developer Intern", "PocketWorks", "https://dummyimage.com/128x128/0f766e/ffffff&text=PW", "Remote", JobType.REMOTE, WorkMode.REMOTE, "Rs. 23,000/month", "React Native, JavaScript, Firebase", ExperienceLevel.FRESHER, "Create mobile screens and integrate Firebase-backed features.", "Candidates with Android or React Native demo apps.", 32),
         job(recruiterTwo, "Business Analyst Fresher", "InsightBridge", "https://dummyimage.com/128x128/7c3aed/ffffff&text=IB", "Delhi", JobType.FULL_TIME, WorkMode.ON_SITE, "Rs. 4.5 LPA", "SQL, Documentation, Agile", ExperienceLevel.FRESHER, "Convert stakeholder needs into user stories and data views.", "Freshers with strong communication and analytical thinking.", 17),
-        job(recruiterOne, "AI Prompt Engineering Intern", "CleverText AI", "https://dummyimage.com/128x128/f97316/ffffff&text=AI", "Pune", JobType.HYBRID, WorkMode.HYBRID, "Rs. 32,000/month", "Prompt Engineering, Python, Evaluation", ExperienceLevel.FRESHER, "Design prompts, evaluate model output, and build small test sets.", "Candidates with strong writing and basic programming knowledge.", 22)
+        job(recruiterOne, "AI Prompt Engineering Intern", "CleverText AI", "https://dummyimage.com/128x128/f97316/ffffff&text=AI", "Pune", JobType.HYBRID, WorkMode.HYBRID, "Rs. 32,000/month", "Prompt Engineering, Python, Evaluation", ExperienceLevel.FRESHER, "Design prompts, evaluate model output, and build small test sets.", "Candidates with strong writing and basic programming knowledge.", 22),
+        job(recruiterTwo, "Expired QA Demo Role", "CloudMint Systems", "https://dummyimage.com/128x128/0f766e/ffffff&text=CM", "Remote", JobType.INTERNSHIP, WorkMode.REMOTE, "Rs. 15,000/month", "Testing, Jira, SQL", ExperienceLevel.FRESHER, "This seeded role is intentionally expired so the feed filter can be verified.", "Demo-only expired role visible to recruiter and admin records.", -3)
     );
     jobRepository.saveAll(jobs);
 
-    Application application = new Application();
-    application.setJobSeeker(jobSeeker);
-    application.setJob(jobs.get(2));
-    application.setGithubUrl(profile.getGithubUrl());
-    application.setResumePdfUrl(profile.getResumePdfUrl());
-    application.setStatus(ApplicationStatus.SHORTLISTED);
-    applicationRepository.save(application);
+    applicationRepository.saveAll(List.of(
+        application(jobSeeker, jobs.get(1), profile, ApplicationStatus.APPLIED),
+        application(jobSeeker, jobs.get(2), profile, ApplicationStatus.SHORTLISTED),
+        application(jobSeeker, jobs.get(7), profile, ApplicationStatus.VIEWED)
+    ));
 
-    Swipe swipe = new Swipe();
-    swipe.setJobSeeker(jobSeeker);
-    swipe.setJob(jobs.get(2));
-    swipe.setAction(SwipeAction.LIKE);
-    swipeRepository.save(swipe);
+    swipeRepository.saveAll(List.of(
+        swipe(jobSeeker, jobs.get(1), SwipeAction.LIKE),
+        swipe(jobSeeker, jobs.get(2), SwipeAction.LIKE),
+        swipe(jobSeeker, jobs.get(7), SwipeAction.SAVE)
+    ));
   }
 
   private User user(String name, String email, String password, UserRole role) {
@@ -158,5 +157,23 @@ public class DataInitializer implements CommandLineRunner {
     job.setDeadline(LocalDate.now().plusDays(days));
     job.setActive(true);
     return job;
+  }
+
+  private Application application(User jobSeeker, Job job, JobSeekerProfile profile, ApplicationStatus status) {
+    Application application = new Application();
+    application.setJobSeeker(jobSeeker);
+    application.setJob(job);
+    application.setGithubUrl(profile.getGithubUrl());
+    application.setResumePdfUrl(profile.getResumePdfUrl());
+    application.setStatus(status);
+    return application;
+  }
+
+  private Swipe swipe(User jobSeeker, Job job, SwipeAction action) {
+    Swipe swipe = new Swipe();
+    swipe.setJobSeeker(jobSeeker);
+    swipe.setJob(job);
+    swipe.setAction(action);
+    return swipe;
   }
 }

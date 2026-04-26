@@ -90,17 +90,19 @@ DATABASE_PASSWORD=postgres
 JWT_SECRET=replace_with_a_long_random_secret_for_demo
 UPLOAD_DIR=uploads
 FRONTEND_URL=http://localhost:3000
-SPRING_PROFILES_ACTIVE=dev
+APP_DEV_MODE=true
 ```
 
 Example files are included at `frontend/.env.example` and `backend/.env.example`.
 
+The backend imports `backend/.env` automatically through Spring Boot config import. You can also set the same values as OS environment variables in CI, Render, Railway, Docker, or your terminal.
+
 ## PostgreSQL Setup
 
-Using Docker Compose:
+### Option 1: Local PostgreSQL With Docker
 
 ```bash
-cd ..
+cd "C:\Users\arpan\OneDrive\Documents\New project"
 docker compose up -d
 ```
 
@@ -113,6 +115,12 @@ password: postgres
 ```
 
 If you are using an existing PostgreSQL installation instead of Docker, create the database manually:
+
+```bash
+createdb -U postgres jobswipe
+```
+
+Or from `psql`:
 
 ```sql
 CREATE DATABASE jobswipe;
@@ -132,19 +140,79 @@ On Windows PowerShell without `psql`, at least confirm the port is open:
 Test-NetConnection -ComputerName localhost -Port 5432
 ```
 
+### Option 2: Local PostgreSQL Without Docker
+
+1. Install PostgreSQL 14 or newer.
+2. Create a database named `jobswipe`.
+3. Set `backend/.env`:
+
+```env
+DATABASE_URL=jdbc:postgresql://localhost:5432/jobswipe
+DATABASE_USERNAME=postgres
+DATABASE_PASSWORD=your_local_postgres_password
+JWT_SECRET=replace_with_a_very_long_random_secret_for_hmac_signing_at_least_32_chars
+UPLOAD_DIR=uploads
+FRONTEND_URL=http://localhost:3000
+APP_DEV_MODE=true
+```
+
+### Option 3: Cloud PostgreSQL With Supabase
+
+1. Create a Supabase project and copy the pooled database connection details.
+2. In `backend/.env`, use a JDBC URL like this:
+
+```env
+DATABASE_URL=jdbc:postgresql://aws-0-your-region.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0
+DATABASE_USERNAME=postgres.your-project-ref
+DATABASE_PASSWORD=your_supabase_database_password
+JWT_SECRET=replace_with_a_very_long_random_secret_for_hmac_signing_at_least_32_chars
+UPLOAD_DIR=uploads
+FRONTEND_URL=http://localhost:3000
+APP_DEV_MODE=true
+```
+
+### Option 4: Cloud PostgreSQL With Neon
+
+1. Create a Neon project and copy the pooled or direct database connection details.
+2. In `backend/.env`, use a JDBC URL like this:
+
+```env
+DATABASE_URL=jdbc:postgresql://ep-your-project.your-region.aws.neon.tech/neondb?sslmode=require
+DATABASE_USERNAME=neondb_owner
+DATABASE_PASSWORD=your_neon_database_password
+JWT_SECRET=replace_with_a_very_long_random_secret_for_hmac_signing_at_least_32_chars
+UPLOAD_DIR=uploads
+FRONTEND_URL=http://localhost:3000
+APP_DEV_MODE=true
+```
+
+Never commit `backend/.env`; it is ignored by Git.
+
+### Development Fallback Without PostgreSQL
+
+For UI demos on machines where PostgreSQL is unavailable, use the H2 fallback profile:
+
+```powershell
+cd "C:\Users\arpan\OneDrive\Documents\New project\backend"
+$env:SPRING_PROFILES_ACTIVE="dev-fallback"
+mvn spring-boot:run
+```
+
+This fallback creates `backend/data/jobswipe-dev.mv.db`. It is ignored by Git and should not be used as the final PostgreSQL verification.
+
 ## Run Locally
 
 Terminal 1 - backend:
 
-```bash
-cd backend
+```powershell
+cd "C:\Users\arpan\OneDrive\Documents\New project\backend"
 mvn spring-boot:run
 ```
 
 Terminal 2 - frontend:
 
-```bash
-cd frontend
+```powershell
+cd "C:\Users\arpan\OneDrive\Documents\New project\frontend"
 npm install
 npm run dev
 ```
@@ -157,6 +225,22 @@ If you prefer running the packaged backend jar:
 cd backend
 mvn clean package
 java -jar target/jobswipe-backend-1.0.0.jar
+```
+
+## Quick Login API Test
+
+After the backend is running, test demo login from PowerShell:
+
+```powershell
+$body = @{ email = "jobseeker@jobswipe.dev"; password = "JobSeeker@123" } | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri "http://localhost:8080/api/auth/login" -ContentType "application/json" -Body $body
+```
+
+Repeat with:
+
+```text
+recruiter@jobswipe.dev / Recruiter@123
+admin@jobswipe.dev / Admin@123
 ```
 
 ## Verification Commands
