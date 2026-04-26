@@ -206,7 +206,7 @@ export function SwipeDeck() {
         </div>
         <div className="mt-4 rounded-3xl border border-ink/8 bg-white p-5 shadow-card">
           <div className="flex items-center justify-between text-sm font-bold text-ink/62">
-            <span>{viewed} viewed · {jobs.length} remaining</span>
+            <span>{viewed} viewed / {jobs.length} remaining</span>
             <span>{progress}%</span>
           </div>
           <div className="mt-3 h-3 overflow-hidden rounded-full bg-ink/8">

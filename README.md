@@ -30,6 +30,13 @@ JobSwipe solves the problem of job-search fatigue and high screen time by replac
 - Build tools: npm for frontend, Maven for backend
 - Development uploads: local backend upload folder
 
+## Prerequisites
+
+- Node.js 20 or newer
+- Java 21
+- Maven 3.9 or newer
+- PostgreSQL 14 or newer, or Docker with Docker Compose
+
 ## Folder Structure
 
 ```text
@@ -56,16 +63,30 @@ backend/
 
 Create `frontend/.env.local`:
 
+```bash
+cd frontend
+cp .env.example .env.local
+```
+
+Then keep this value:
+
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api
 ```
 
-Create `backend/.env` or set these variables in your shell:
+Create `backend/.env` from the example:
+
+```bash
+cd ../backend
+cp .env.example .env
+```
+
+Use these values for the local Docker database, or adjust the password for your own PostgreSQL install:
 
 ```env
 DATABASE_URL=jdbc:postgresql://localhost:5432/jobswipe
 DATABASE_USERNAME=postgres
-DATABASE_PASSWORD=your_password
+DATABASE_PASSWORD=postgres
 JWT_SECRET=replace_with_a_long_random_secret_for_demo
 UPLOAD_DIR=uploads
 FRONTEND_URL=http://localhost:3000
@@ -79,10 +100,19 @@ Example files are included at `frontend/.env.example` and `backend/.env.example`
 Using Docker Compose:
 
 ```bash
+cd ..
 docker compose up -d
 ```
 
-Or create the database manually:
+The included `docker-compose.yml` starts PostgreSQL on `localhost:5432` with:
+
+```text
+database: jobswipe
+username: postgres
+password: postgres
+```
+
+If you are using an existing PostgreSQL installation instead of Docker, create the database manually:
 
 ```sql
 CREATE DATABASE jobswipe;
@@ -90,9 +120,28 @@ CREATE DATABASE jobswipe;
 
 The backend uses Hibernate `ddl-auto=update` for local demo development and seeds demo records automatically when the database is empty.
 
+Confirm PostgreSQL is reachable before starting the backend:
+
+```bash
+psql -h localhost -U postgres -d jobswipe
+```
+
+On Windows PowerShell without `psql`, at least confirm the port is open:
+
+```powershell
+Test-NetConnection -ComputerName localhost -Port 5432
+```
+
 ## Run Locally
 
-Install and run the frontend:
+Terminal 1 - backend:
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+Terminal 2 - frontend:
 
 ```bash
 cd frontend
@@ -100,24 +149,26 @@ npm install
 npm run dev
 ```
 
-Run the backend:
+Open [http://localhost:3000](http://localhost:3000). The frontend calls the backend at [http://localhost:8080/api](http://localhost:8080/api).
+
+If you prefer running the packaged backend jar:
 
 ```bash
 cd backend
-mvn spring-boot:run
+mvn clean package
+java -jar target/jobswipe-backend-1.0.0.jar
 ```
-
-Open [http://localhost:3000](http://localhost:3000). The frontend calls the backend at [http://localhost:8080/api](http://localhost:8080/api).
 
 ## Verification Commands
 
 ```bash
 cd backend
-mvn test
+mvn clean package
 ```
 
 ```bash
 cd frontend
+npm install
 npm run typecheck
 npm run build
 ```
@@ -137,8 +188,14 @@ npm run build
 - Jobs: `GET /api/jobs/feed`, `GET /api/jobs`, `GET /api/jobs/{id}`, `POST /api/jobs`, `PUT /api/jobs/{id}`, `DELETE /api/jobs/{id}?confirm=true`
 - Swipes: `POST /api/swipes`, `GET /api/swipes/history`, `POST /api/swipes/undo`
 - Applications: `POST /api/applications`, `GET /api/applications/my`, `PUT /api/applications/{id}/withdraw`
-- Recruiter: `GET /api/recruiter/dashboard`, `GET/PUT /api/recruiter/company-profile`, `POST /api/recruiter/company-logo`, `GET /api/recruiter/applications`
-- Admin: `GET /api/admin/dashboard`, `GET /api/admin/users`, `GET /api/admin/jobs`, `GET /api/admin/applications`, `GET /api/admin/swipes`
+- Recruiter: `GET /api/recruiter/dashboard`, `GET/PUT /api/recruiter/company-profile`, `POST /api/recruiter/company-logo`, `GET /api/recruiter/applications`, `PUT /api/recruiter/applications/{id}/status`
+- Admin: `GET /api/admin/dashboard`, `GET /api/admin/users`, `GET /api/admin/jobseekers`, `GET /api/admin/recruiters`, `GET /api/admin/jobs`, `GET /api/admin/applications`, `GET /api/admin/swipes`
+
+Job feed filters:
+
+```bash
+GET /api/jobs/feed?jobType=FULL_TIME&experienceLevel=FRESHER&location=Remote&skill=Java&workMode=REMOTE&activeOnly=true
+```
 
 ## Upload Notes
 

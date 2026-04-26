@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jobswipe.entity.ExperienceLevel;
 import com.jobswipe.entity.Job;
 import com.jobswipe.entity.JobType;
+import com.jobswipe.entity.SwipeAction;
 import com.jobswipe.entity.User;
 import com.jobswipe.entity.WorkMode;
 import com.jobswipe.repository.JobRepository;
@@ -84,6 +85,17 @@ class JobSwipeFlowSmokeTests {
         .content("{\"token\":\"" + resetToken + "\",\"newPassword\":\"Password@456\",\"confirmPassword\":\"Password@456\"}"))
         .andExpect(status().isOk());
 
+    mockMvc.perform(put("/api/jobseeker/profile")
+        .header("Authorization", bearer(jobSeekerToken))
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("""
+            {"phone":"9876543210","githubUrl":"https://github.com/flow-jobseeker","education":"B.Tech Computer Science","degree":"B.Tech","college":"JobSwipe Institute","passingYear":2026,"cgpaOrPercentage":"8.7 CGPA","skills":"Java, Spring Boot, React, SQL","experienceLevel":"FRESHER","preferredLocation":"Remote","preferredJobType":"FULL_TIME"}
+            """))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.githubUrl").value("https://github.com/flow-jobseeker"))
+        .andExpect(jsonPath("$.degree").value("B.Tech"))
+        .andExpect(jsonPath("$.experienceLevel").value("FRESHER"));
+
     MockMultipartFile picture = new MockMultipartFile("file", "avatar.png", "image/png", new byte[]{1, 2, 3});
     mockMvc.perform(multipart("/api/jobseeker/profile-picture").file(picture).header("Authorization", bearer(jobSeekerToken)))
         .andExpect(status().isOk())
@@ -126,17 +138,30 @@ class JobSwipeFlowSmokeTests {
     expired.setActive(true);
     jobRepository.save(expired);
 
-    mockMvc.perform(get("/api/jobs/feed?jobType=FULL_TIME&experienceLevel=FRESHER").header("Authorization", bearer(jobSeekerToken)))
+    mockMvc.perform(get("/api/jobs/feed?jobType=FULL_TIME&experienceLevel=FRESHER&location=Remote&skill=Spring&workMode=REMOTE").header("Authorization", bearer(jobSeekerToken)))
         .andExpect(status().isOk())
         .andExpect(content().string(containsString("Flow Java Developer")))
         .andExpect(content().string(not(containsString("Expired Smoke Job"))));
 
-    mockMvc.perform(post("/api/applications")
+    mockMvc.perform(post("/api/swipes")
         .header("Authorization", bearer(jobSeekerToken))
         .contentType(MediaType.APPLICATION_JSON)
-        .content("{\"jobId\":\"" + jobId + "\"}"))
+        .content("{\"jobId\":\"" + jobId + "\",\"action\":\"SAVE\"}"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.status").value("APPLIED"));
+        .andExpect(jsonPath("$.action").value(SwipeAction.SAVE.name()));
+    mockMvc.perform(get("/api/swipes/history").header("Authorization", bearer(jobSeekerToken)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].action").value(SwipeAction.SAVE.name()));
+    mockMvc.perform(post("/api/swipes/undo").header("Authorization", bearer(jobSeekerToken)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.action").value(SwipeAction.SAVE.name()));
+
+    mockMvc.perform(post("/api/swipes")
+        .header("Authorization", bearer(jobSeekerToken))
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"jobId\":\"" + jobId + "\",\"action\":\"LIKE\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.action").value(SwipeAction.LIKE.name()));
 
     MvcResult applications = mockMvc.perform(get("/api/applications/my").header("Authorization", bearer(jobSeekerToken)))
         .andExpect(status().isOk())
