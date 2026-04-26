@@ -1,16 +1,46 @@
+# Environment and secrets
 .env
 .env.local
 .env.*.local
 !.env.example
-.next
-node_modules
-dist
-coverage
-*.db
-*.db-journal
-prisma/dev.db
-dev-server*.log
-tsconfig.tsbuildinfo
-.vercel
 *.pem
 *.key
+*.p12
+*.jks
+
+# Node / Next.js
+node_modules
+frontend/node_modules
+.next
+frontend/.next
+out
+frontend/out
+dist
+coverage
+frontend/coverage
+tsconfig.tsbuildinfo
+frontend/tsconfig.tsbuildinfo
+.vercel
+frontend/.vercel
+
+# Java / Maven
+target
+backend/target
+build
+backend/build
+
+# Local databases and generated files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+prisma/dev.db
+
+# Local uploads
+uploads
+backend/uploads
+
+# Logs and local tools
+*.log
+dev-server*.log
+.local-tools

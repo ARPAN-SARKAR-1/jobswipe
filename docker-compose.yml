@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: jobswipe-postgres
+    environment:
+      POSTGRES_DB: jobswipe
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - jobswipe_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  jobswipe_postgres_data:
